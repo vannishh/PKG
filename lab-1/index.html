@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" src="style.css">
+    <script src="script.js"/>
+    <title>Цветовые модели - RGB ↔ HSV ↔ LAB</title>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Цветовые модели: RGB ↔ HSV ↔ LAB</h1>
+        </header>
+        
+        <div class="color-display">
+            <div class="color-preview" id="colorPreview"></div>
+            <div class="color-value" id="colorValue">RGB: (127, 127, 127)</div>
+        </div>
+        
+        <div class="models-container">
+            <!-- RGB модель -->
+            <div class="model-card">
+                <h2 class="model-title">RGB модель</h2>
+                <div class="color-input">
+                    <label for="rgb-r">Красный (R):</label>
+                    <div class="input-group">
+                        <input type="range" id="rgb-r" min="0" max="255" value="127">
+                        <input type="number" id="rgb-r-value" min="0" max="255" value="127">
+                    </div>
+                    <div class="warning" id="rgb-r-warning">Значение обрезано</div>
+                </div>
+                <div class="color-input">
+                    <label for="rgb-g">Зеленый (G):</label>
+                    <div class="input-group">
+                        <input type="range" id="rgb-g" min="0" max="255" value="127">
+                        <input type="number" id="rgb-g-value" min="0" max="255" value="127">
+                    </div>
+                    <div class="warning" id="rgb-g-warning">Значение обрезано</div>
+                </div>
+                <div class="color-input">
+                    <label for="rgb-b">Синий (B):</label>
+                    <div class="input-group">
+                        <input type="range" id="rgb-b" min="0" max="255" value="127">
+                        <input type="number" id="rgb-b-value" min="0" max="255" value="127">
+                    </div>
+                    <div class="warning" id="rgb-b-warning">Значение обрезано</div>
+                </div>
+                <div class="color-picker-container">
+                    <input type="color" id="rgb-color-picker" class="color-picker" value="#7f7f7f">
+                </div>
+            </div>
+            
+            <!-- HSV модель -->
+            <div class="model-card">
+                <h2 class="model-title">HSV модель</h2>
+                <div class="color-input">
+                    <label for="hsv-h">Оттенок (H):</label>
+                    <div class="input-group">
+                        <input type="range" id="hsv-h" min="0" max="360" value="0">
+                        <input type="number" id="hsv-h-value" min="0" max="360" value="0">
+                    </div>
+                    <div class="warning" id="hsv-h-warning">Значение обрезано</div>
+                </div>
+                <div class="color-input">
+                    <label for="hsv-s">Насыщенность (S):</label>
+                    <div class="input-group">
+                        <input type="range" id="hsv-s" min="0" max="100" value="0">
+                        <input type="number" id="hsv-s-value" min="0" max="100" value="0">
+                    </div>
+                    <div class="warning" id="hsv-s-warning">Значение обрезано</div>
+                </div>
+                <div class="color-input">
+                    <label for="hsv-v">Яркость (V):</label>
+                    <div class="input-group">
+                        <input type="range" id="hsv-v" min="0" max="100" value="50">
+                        <input type="number" id="hsv-v-value" min="0" max="100" value="50">
+                    </div>
+                    <div class="warning" id="hsv-v-warning">Значение обрезано</div>
+                </div>
+                <div class="color-picker-container">
+                    <input type="color" id="hsv-color-picker" class="color-picker" value="#7f7f7f">
+                </div>
+            </div>
+            
+            <!-- LAB модель -->
+            <div class="model-card">
+                <h2 class="model-title">LAB модель</h2>
+                <div class="color-input">
+                    <label for="lab-l">Светлота (L):</label>
+                    <div class="input-group">
+                        <input type="range" id="lab-l" min="0" max="100" value="53">
+                        <input type="number" id="lab-l-value" min="0" max="100" value="53">
+                    </div>
+                    <div class="warning" id="lab-l-warning">Значение обрезано</div>
+                </div>
+                <div class="color-input">
+                    <label for="lab-a">A (зелено-красный):</label>
+                    <div class="input-group">
+                        <input type="range" id="lab-a" min="-128" max="127" value="0">
+                        <input type="number" id="lab-a-value" min="-128" max="127" value="0">
+                    </div>
+                    <div class="warning" id="lab-a-warning">Значение обрезано</div>
+                </div>
+                <div class="color-input">
+                    <label for="lab-b">B (сине-желтый):</label>
+                    <div class="input-group">
+                        <input type="range" id="lab-b" min="-128" max="127" value="0">
+                        <input type="number" id="lab-b-value" min="-128" max="127" value="0">
+                    </div>
+                    <div class="warning" id="lab-b-warning">Значение обрезано</div>
+                </div>
+                <div class="color-picker-container">
+                    <input type="color" id="lab-color-picker" class="color-picker" value="#7f7f7f">
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>Инструкция по использованию</h2>
+            <ul>
+                <li>Используйте ползунки или поля ввода для изменения значений цветовых компонент</li>
+                <li>При изменении любого параметра в одной модели, значения в других моделях автоматически пересчитываются</li>
+                <li>Используйте цветовые пикеры для выбора цвета из палитры</li>
+                <li>Если значения выходят за допустимые пределы, появится предупреждение о корректировке</li>
+                <li>Текущий цвет отображается в верхней части страницы</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
