@@ -6,7 +6,7 @@ import threading
 from datetime import datetime
 import struct
 
-# Включаем более детальный парсинг JPEG
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class ImageInfoExtractor:
@@ -16,11 +16,11 @@ class ImageInfoExtractor:
     def get_image_info(self, file_path):
         """Извлекает информацию об изображении из файла"""
         try:
-            # Получаем размер файла
+            
             file_size = os.path.getsize(file_path)
             file_size_kb = file_size / 1024
             
-            # Для BMP файлов используем специальную обработку
+            
             if file_path.lower().endswith(('.bmp')):
                 return self._get_bmp_info(file_path, file_size_kb)
             
@@ -35,14 +35,14 @@ class ImageInfoExtractor:
                     'compression': 'N/A'
                 }
                 
-                # Разрешение (DPI)
+                
                 dpi_x, dpi_y = self._get_dpi(img)
                 info['dpi'] = f"{dpi_x}×{dpi_y}"
                 
-                # Сжатие
+                
                 info['compression'] = self._get_compression(img, file_path)
                 
-                # Дополнительная информация для специфических форматов
+                
                 info.update(self._get_format_specific_info(img, file_path))
                 
                 return info
@@ -63,51 +63,51 @@ class ImageInfoExtractor:
         """Специальная обработка для BMP файлов"""
         try:
             with open(file_path, 'rb') as f:
-                # Читаем заголовок BMP
+                
                 header = f.read(54)
                 if len(header) < 54:
                     raise ValueError("Неверный формат BMP файла")
                 
-                # Проверяем сигнатуру BMP
+                
                 if header[0:2] != b'BM':
                     raise ValueError("Неверная сигнатура BMP")
                 
-                # Размер файла из заголовка
+                
                 file_size_from_header = struct.unpack('<I', header[2:6])[0]
                 
-                # Смещение до данных пикселей
+                
                 data_offset = struct.unpack('<I', header[10:14])[0]
                 
-                # Размер информационного заголовка
+                
                 header_size = struct.unpack('<I', header[14:18])[0]
                 
-                # Ширина и высота
-                if header_size == 12:  # BITMAPCOREHEADER
+                
+                if header_size == 12:  
                     width = struct.unpack('<H', header[18:20])[0]
                     height = struct.unpack('<H', header[20:22])[0]
                     planes = struct.unpack('<H', header[22:24])[0]
                     bit_count = struct.unpack('<H', header[24:26])[0]
-                    compression = 0  # BI_RGB
-                else:  # BITMAPINFOHEADER и другие
+                    compression = 0  
+                else:  
                     width = struct.unpack('<i', header[18:22])[0]
                     height = struct.unpack('<i', header[22:26])[0]
                     planes = struct.unpack('<H', header[26:28])[0]
                     bit_count = struct.unpack('<H', header[28:30])[0]
                     compression = struct.unpack('<I', header[30:34])[0]
                 
-                # Разрешение (DPI)
+                
                 if header_size >= 40:
-                    # Разрешение в пикселях на метр
+                    
                     ppm_x = struct.unpack('<i', header[38:42])[0]
                     ppm_y = struct.unpack('<i', header[42:46])[0]
                     
-                    # Конвертируем в DPI (1 дюйм = 0.0254 метра)
+                    
                     dpi_x = int(ppm_x / 39.3701) if ppm_x > 0 else 96
                     dpi_y = int(ppm_y / 39.3701) if ppm_y > 0 else 96
                 else:
                     dpi_x = dpi_y = 96
                 
-                # Типы сжатия BMP
+                
                 compression_types = {
                     0: "BI_RGB (нет)",
                     1: "BI_RLE8",
@@ -135,7 +135,7 @@ class ImageInfoExtractor:
                 return info
                 
         except Exception as e:
-            # Если не удалось прочитать как BMP, пробуем через PIL
+            
             try:
                 with Image.open(file_path) as img:
                     info = {
@@ -168,12 +168,12 @@ class ImageInfoExtractor:
     def _get_bmp_mode(self, bit_count):
         """Определяет режим BMP на основе глубины цвета"""
         mode_map = {
-            1: '1',      # Монохромный
-            4: 'P',      # 16 цветов
-            8: 'P',      # 256 цветов
-            16: 'RGB',   # High Color
-            24: 'RGB',   # True Color
-            32: 'RGBA'   # True Color с альфа-каналом
+            1: '1',      
+            4: 'P',      
+            8: 'P',      
+            16: 'RGB',   
+            24: 'RGB',   
+            32: 'RGBA'   
         }
         return mode_map.get(bit_count, 'Unknown')
     
@@ -184,7 +184,7 @@ class ImageInfoExtractor:
         
         try:
             if hasattr(img, 'info'):
-                # Пробуем разные источники DPI
+                
                 if 'dpi' in img.info and img.info['dpi']:
                     dpi_x, dpi_y = img.info['dpi']
                 elif 'jfif_density' in img.info and img.info['jfif_density']:
@@ -192,7 +192,7 @@ class ImageInfoExtractor:
                 elif 'resolution' in img.info and img.info['resolution']:
                     dpi_x, dpi_y = img.info['resolution']
                 
-                # Проверяем корректность значений
+                
                 if dpi_x == 0 or dpi_y == 0:
                     dpi_x, dpi_y = 96, 96
                     
@@ -215,43 +215,43 @@ class ImageInfoExtractor:
         try:
             compression_info = "N/A"
             
-            # Для JPEG - всегда сжатие JPEG
+            
             if img.format == 'JPEG':
                 compression_info = "JPEG"
-                # Пытаемся получить дополнительную информацию
+                
                 jpeg_details = []
                 
-                # Качество JPEG
+                
                 if hasattr(img, 'quality') and img.quality:
                     jpeg_details.append(f"качество: {img.quality}")
                 else:
-                    # Пробуем получить качество из info
+                    
                     quality = img.info.get('quality', None)
                     if quality:
                         jpeg_details.append(f"качество: {quality}")
                 
-                # Прогрессивный или базовый
+                
                 if hasattr(img, 'progressive') and img.progressive:
                     jpeg_details.append("прогрессивный")
                 else:
-                    # Проверяем в info
+                    
                     progressive = img.info.get('progressive', False)
                     if progressive:
                         jpeg_details.append("прогрессивный")
                     else:
                         jpeg_details.append("базовый")
                 
-                # EXIF данные
+                
                 if 'exif' in img.info:
                     jpeg_details.append("EXIF")
                 
-                # Добавляем детали если есть
+                
                 if jpeg_details:
                     compression_info += f" ({', '.join(jpeg_details)})"
                 else:
                     compression_info += " (DCT)"
             
-            # Для PNG
+            
             elif img.format == 'PNG':
                 compression_info = "Deflate"
                 if 'compression' in img.info:
@@ -260,23 +260,23 @@ class ImageInfoExtractor:
                 else:
                     compression_info += " (Zlib)"
             
-            # Для TIFF
+            
             elif img.format == 'TIFF':
                 compression_info = self._get_tiff_compression(img)
             
-            # Для GIF
+            
             elif img.format == 'GIF':
                 compression_info = "LZW"
             
-            # Для BMP
+            
             elif img.format == 'BMP':
                 compression_info = "None (BI_RGB)"
                 
-            # Для PCX
+            
             elif img.format == 'PCX':
                 compression_info = "RLE"
             
-            # Если все еще N/A, пытаемся получить из info
+            
             if compression_info == "N/A" and hasattr(img, 'info'):
                 compression_info = self._get_compression_from_info(img.info)
             
@@ -289,7 +289,7 @@ class ImageInfoExtractor:
         """Определяет сжатие для TIFF файлов"""
         try:
             if hasattr(img, 'tag_v2'):
-                # Ищем тег сжатия (259)
+                
                 if 259 in img.tag_v2:
                     tiff_compression = img.tag_v2[259]
                     compression_names = {
@@ -307,8 +307,8 @@ class ImageInfoExtractor:
                     comp_name = compression_names.get(tiff_compression, f'Unknown ({tiff_compression})')
                     return f"TIFF {comp_name}"
                 
-                # Проверяем другие возможные теги
-                for tag in [266, 286, 287]:  # Различные теги связанные со сжатием
+                
+                for tag in [266, 286, 287]:  
                     if tag in img.tag_v2:
                         return f"TIFF (тег {tag}: {img.tag_v2[tag]})"
             
@@ -319,7 +319,7 @@ class ImageInfoExtractor:
     def _get_compression_from_info(self, info_dict):
         """Пытается определить сжатие из словаря info"""
         try:
-            # Ключи, которые могут содержать информацию о сжатии
+            
             compression_keys = [
                 'compression', 'Compression', 'COMPRESSION',
                 'compression_type', 'compression method',
@@ -331,7 +331,7 @@ class ImageInfoExtractor:
                     value = info_dict[key]
                     if value:
                         if isinstance(value, int):
-                            # Для числовых значений пытаемся интерпретировать
+                            
                             compression_codes = {
                                 0: 'None', 1: 'RLE', 2: 'LZW', 3: 'JPEG',
                                 4: 'Deflate', 5: 'PackBits', 6: 'CCITT',
@@ -341,7 +341,7 @@ class ImageInfoExtractor:
                         else:
                             return str(value)
             
-            # Проверяем наличие специфичных для формата ключей
+            
             if 'jfif' in info_dict:
                 return "JPEG (JFIF)"
             elif 'adobe' in info_dict:
@@ -359,10 +359,10 @@ class ImageInfoExtractor:
         
         try:
             if img.format == 'JPEG':
-                # Информация о JPEG
+                
                 jpeg_info = []
                 
-                # Качество
+                
                 quality = None
                 if hasattr(img, 'quality') and img.quality:
                     quality = img.quality
@@ -372,7 +372,7 @@ class ImageInfoExtractor:
                 if quality:
                     jpeg_info.append(f"качество: {quality}")
                 
-                # Тип JPEG
+                
                 if hasattr(img, 'progressive') and img.progressive:
                     jpeg_info.append("прогрессивный")
                 elif 'progressive' in img.info and img.info['progressive']:
@@ -380,12 +380,12 @@ class ImageInfoExtractor:
                 else:
                     jpeg_info.append("базовый")
                 
-                # EXIF данные
+                
                 if 'exif' in img.info:
                     exif_size = len(img.info['exif'])
                     jpeg_info.append(f"EXIF: {exif_size} байт")
                 
-                # JFIF или Adobe
+                
                 if 'jfif' in img.info:
                     jpeg_info.append("JFIF")
                 elif 'adobe' in img.info:
@@ -394,7 +394,7 @@ class ImageInfoExtractor:
                 format_specific['jpeg_info'] = ", ".join(jpeg_info)
                 
             elif img.format == 'GIF':
-                # Информация о GIF
+                
                 gif_info = []
                 try:
                     if hasattr(img, 'is_animated') and img.is_animated:
@@ -414,14 +414,14 @@ class ImageInfoExtractor:
                     format_specific['gif_info'] = "GIF информация"
                     
             elif img.format == 'TIFF':
-                # Информация о TIFF
+                
                 tiff_info = []
                 try:
                     if hasattr(img, 'tag_v2'):
                         tags_count = len(img.tag_v2)
                         tiff_info.append(f"тегов: {tags_count}")
                     
-                    # Проверка на многостраничность
+                    
                     if hasattr(img, 'n_frames') and img.n_frames > 1:
                         tiff_info.append(f"страниц: {img.n_frames}")
                     
@@ -430,7 +430,7 @@ class ImageInfoExtractor:
                     format_specific['tiff_info'] = "TIFF информация"
             
             elif img.format == 'PNG':
-                # Информация о PNG
+                
                 png_info = []
                 if 'gamma' in img.info:
                     png_info.append(f"гамма: {img.info['gamma']:.3f}")
@@ -438,7 +438,7 @@ class ImageInfoExtractor:
                 if 'transparency' in img.info:
                     png_info.append("прозрачность")
                 
-                # Уровень сжатия
+                
                 if 'compression' in img.info:
                     png_info.append(f"сжатие: {img.info['compression']}")
                 
@@ -479,23 +479,23 @@ class ImageInfoApp:
     
     def setup_ui(self):
         """Создает пользовательский интерфейс"""
-        # Основной фрейм
+        
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Настройка весов строк и столбцов
+        
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(2, weight=1)
         
-        # Заголовок
+        
         title_label = ttk.Label(main_frame, 
                                text="Анализатор графических файлов - Лабораторная работа 2", 
                                font=("Arial", 16, "bold"))
         title_label.grid(row=0, column=0, columnspan=4, pady=(0, 20))
         
-        # Фрейм выбора папки
+        
         folder_frame = ttk.Frame(main_frame)
         folder_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(0, 10))
         folder_frame.columnconfigure(1, weight=1)
@@ -509,20 +509,20 @@ class ImageInfoApp:
         ttk.Button(folder_frame, text="Обзор", command=self.browse_folder).grid(row=0, column=2, padx=(0, 10))
         ttk.Button(folder_frame, text="Сканировать", command=self.scan_folder).grid(row=0, column=3)
         
-        # Статус бар
+        
         self.status_var = tk.StringVar(value="Готов к работе")
         status_bar = ttk.Label(main_frame, textvariable=self.status_var, relief=tk.SUNKEN)
         status_bar.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(10, 0))
         
-        # Прогресс бар
+        
         self.progress = ttk.Progressbar(main_frame, mode='determinate')
         self.progress.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=(5, 0))
         
-        # Таблица результатов
+        
         columns = ('filename', 'file_size', 'size', 'dpi', 'color_depth', 'compression', 'format_specific')
         self.tree = ttk.Treeview(main_frame, columns=columns, show='headings', height=25)
         
-        # Заголовки столбцов
+        
         self.tree.heading('filename', text='Имя файла')
         self.tree.heading('file_size', text='Размер файла')
         self.tree.heading('size', text='Размер изображения')
@@ -531,7 +531,7 @@ class ImageInfoApp:
         self.tree.heading('compression', text='Сжатие')
         self.tree.heading('format_specific', text='Доп. информация')
         
-        # Ширина столбцов
+        
         self.tree.column('filename', width=200, anchor=tk.W)
         self.tree.column('file_size', width=100, anchor=tk.CENTER)
         self.tree.column('size', width=120, anchor=tk.CENTER)
@@ -540,14 +540,14 @@ class ImageInfoApp:
         self.tree.column('compression', width=150, anchor=tk.CENTER)
         self.tree.column('format_specific', width=300, anchor=tk.W)
         
-        # Scrollbar для таблицы
+        
         scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         
         self.tree.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 0))
         scrollbar.grid(row=2, column=3, sticky=(tk.N, tk.S), pady=(10, 0))
         
-        # Фрейм с кнопками
+        
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=5, column=0, columnspan=4, pady=(10, 0), sticky=(tk.W, tk.E))
         
@@ -555,11 +555,11 @@ class ImageInfoApp:
         ttk.Button(button_frame, text="Очистить результаты", command=self.clear_results).grid(row=0, column=1)
         ttk.Button(button_frame, text="Остановить обработку", command=self.stop_processing).grid(row=0, column=2)
         
-        # Информация о количестве файлов
+        
         self.file_count_var = tk.StringVar(value="Файлов: 0")
         ttk.Label(button_frame, textvariable=self.file_count_var).grid(row=0, column=3, sticky=tk.E)
         
-        # Подсказка
+        
         hint_label = ttk.Label(main_frame, 
                               text="Поддерживаемые форматы: JPG, JPEG, GIF, TIF, TIFF, BMP, PNG, PCX", 
                               font=("Arial", 9), 
@@ -583,12 +583,12 @@ class ImageInfoApp:
             messagebox.showwarning("Внимание", "Идет обработка файлов. Дождитесь завершения.")
             return
         
-        # Поиск графических файлов
+        
         self.files_to_process = []
         
         for root_dir, dirs, files in os.walk(folder_path):
             for file in files:
-                if len(self.files_to_process) >= 100000:  # Ограничение как в задании
+                if len(self.files_to_process) >= 100000:  
                     break
                 ext = os.path.splitext(file)[1].lower()
                 if ext in self.extractor.supported_formats:
@@ -600,7 +600,7 @@ class ImageInfoApp:
             messagebox.showinfo("Информация", "В выбранной папке не найдено графических файлов поддерживаемых форматов.")
             return
         
-        # Запуск обработки в отдельном потоке
+        
         self.current_processing = True
         threading.Thread(target=self.process_files, daemon=True).start()
     
@@ -608,28 +608,28 @@ class ImageInfoApp:
         """Обрабатывает файлы и отображает информацию"""
         start_time = datetime.now()
         
-        # Очистка таблицы
+        
         self.root.after(0, self.clear_results)
         
-        # Настройка прогресс бара
+        
         self.progress['maximum'] = len(self.files_to_process)
         self.progress['value'] = 0
         
         processed_count = 0
         
         for file_path in self.files_to_process:
-            if not self.current_processing:  # Проверка на прерывание
+            if not self.current_processing:  
                 break
                 
             info = self.extractor.get_image_info(file_path)
             
-            # Обновление UI в основном потоке
+            
             self.root.after(0, self.add_tree_item, info)
             
             processed_count += 1
             self.progress['value'] = processed_count
             
-            # Обновление статуса каждые 10 файлов или для последнего файла
+            
             if processed_count % 10 == 0 or processed_count == len(self.files_to_process):
                 status = f"Обработано: {processed_count}/{len(self.files_to_process)}"
                 self.root.after(0, lambda: self.status_var.set(status))
@@ -646,7 +646,7 @@ class ImageInfoApp:
     
     def add_tree_item(self, info):
         """Добавляет строку в таблицу"""
-        # Форматируем глубину цвета
+        
         color_depth = info.get('color_depth', 'N/A')
         if color_depth != 'N/A':
             color_depth = f"{color_depth} бит"
@@ -686,15 +686,15 @@ class ImageInfoApp:
         if filename:
             try:
                 with open(filename, 'w', encoding='utf-8-sig') as f:
-                    # Заголовки
+                    
                     headers = ['Имя файла', 'Размер файла', 'Размер изображения', 'Разрешение (DPI)', 
                               'Глубина цвета', 'Сжатие', 'Доп. информация']
                     f.write(';'.join(headers) + '\n')
                     
-                    # Данные
+                    
                     for item in self.tree.get_children():
                         values = self.tree.item(item)['values']
-                        # Экранирование для CSV
+                        
                         escaped_values = [f'"{v}"' if ';' in str(v) else str(v) for v in values]
                         f.write(';'.join(escaped_values) + '\n')
                 
