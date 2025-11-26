@@ -1,0 +1,41 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef1f7;
+}
+
+header {
+  background: #314fa0;
+  color: #fff;
+  padding: 15px;
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.controls {
+  width: 300px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+}
+
+.controls label { display:block; margin:5px 0; }
+.controls button { margin:5px 0; width:100%; }
+
+.canvas-area {
+  flex: 1;
+}
+
+canvas {
+  border: 1px solid #aaa;
+  margin-bottom: 10px;
+  max-width: 50%;
+
+}
+
+.hidden { display:none; }

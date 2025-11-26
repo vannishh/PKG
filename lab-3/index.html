@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Вариант 4 — Сегментация + Гистограммы</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+  <h1>Основы обработки цифровых изображений</h1>
+  <p>Сегментация изображения + гистограммы + контрастирование</p>
+</header>
+
+<main class="container">
+
+  
+  <section class="controls">
+
+    <h2>Загрузка изображения</h2>
+    <label>Файл:
+      <input type="file" id="fileInput" accept="image/*" />
+    </label>
+
+    <!-- <div class="preset-images">
+      <button class="preset" data-src="assets/sample1.jpg">Пример 1</button>
+      <button class="preset" data-src="assets/sample2.jpg">Пример 2</button>
+    </div> -->
+
+    <hr>
+
+    <h2>Сегментация</h2>
+    <label><input type="radio" name="method" value="canny" checked> Перепады яркости</label>
+    <label><input type="radio" name="method" value="sobel"> Линии</label>
+    <label><input type="radio" name="method" value="hough"> Градиенты</label>
+    <label><input type="radio" name="method" value="harris"> Точки</label>
+
+    
+    <div class="params">
+
+      <div id="param-canny" class="param-block">
+        <label>Низкий порог: <input id="canny-th1" type="range" min="0" max="300" value="50"></label>
+        <label>Высокий порог: <input id="canny-th2" type="range" min="0" max="300" value="150"></label>
+      </div>
+
+      <div id="param-sobel" class="param-block hidden">
+        <label>scale: <input id="sobel-scale" type="range" min="1" max="10" value="1"></label>
+      </div>
+
+      <div id="param-hough" class="param-block hidden">
+        <label>minLineLength: <input id="hough-minlen" type="range" min="1" max="200" value="30"></label>
+        <label>maxLineGap: <input id="hough-gap" type="range" min="1" max="50" value="10"></label>
+        <label>threshold: <input id="hough-threshold" type="range" min="1" max="200" value="80"></label>
+      </div>
+
+      <div id="param-harris" class="param-block hidden">
+        <label>blockSize: <input id="harris-block" type="range" min="2" max="10" value="2"></label>
+        <label>ksize: <input id="harris-ksize" type="range" min="1" max="7" value="3"></label>
+        <label>k: <input id="harris-k" type="range" min="1" max="100" value="4"></label>
+      </div>
+
+    </div>
+
+    <button id="runBtn">Запустить сегментацию</button>
+    <button id="downloadBtn">Скачать результат</button>
+    <button id="resetBtn">Сброс</button>
+
+    <hr>
+
+    
+    <h2>Гистограммы и контрастирование</h2>
+    <label><input type="radio" name="contrast-method" value="hist" checked> Построить гистограмму</label>
+    <label><input type="radio" name="contrast-method" value="equalize"> Эквализация гистограммы</label>
+    <label><input type="radio" name="contrast-method" value="linear"> Линейное контрастирование</label>
+
+    <div id="param-linear" class="param-block hidden">
+      <label>min: <input id="linear-min" type="range" min="0" max="255" value="0"></label>
+      <label>max: <input id="linear-max" type="range" min="0" max="255" value="255"></label>
+    </div>
+
+    <button id="contrastBtn">Выполнить</button>
+
+  </section>
+
+  
+  <section class="canvas-area">
+    <h3>Исходное изображение</h3>
+    <canvas id="sourceCanvas"></canvas>
+
+    <h3>Результат</h3>
+    <canvas id="resultCanvas"></canvas>
+
+    <h3>Гистограмма</h3>
+    <canvas id="histCanvas" width="800" height="400"></canvas>
+  </section>
+
+</main>
+
+
+<script async src="https://docs.opencv.org/4.x/opencv.js"
+        onload="cv['onRuntimeInitialized']=onOpenCvReady;"></script>
+
+<script src="utils.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
