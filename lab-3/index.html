@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа: Обработка изображений</title>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+    <div class="container">
+        
+        <section class="app-section">
+            <h2>1. Сегментация изображений</h2>
+            <div class="input-section">
+                <div class="image-upload-container">
+                    <div class="upload-area" id="uploadArea1">
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #2c3e50;">Загрузите изображение</div>
+                        <p>Нажмите для выбора файла или перетащите сюда изображение</p>
+                        <input type="file" id="imageInput1" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <select id="segmentationType">
+                        <option value="edges">Перепады яркости (края)</option>
+                        <option value="lines">Обнаружение линий</option>
+                        <option value="points">Обнаружение точек</option>
+                    </select>
+                    <button id="applySegmentation">Применить сегментацию</button>
+                    <button id="resetSegmentation">Сбросить</button>
+                </div>
+                
+                <div class="parameter-controls" id="segmentationParams">
+                    <div class="param-group">
+                        <div class="param-label">Чувствительность</div>
+                        <input type="range" id="sensitivity" min="1" max="100" value="30">
+                        <div class="param-value" id="sensitivityValue">30%</div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <div class="param-label">Размер точек/толщина линий</div>
+                        <input type="range" id="size" min="1" max="10" value="3">
+                        <div class="param-value" id="sizeValue">3px</div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <div class="param-label">Порог обнаружения</div>
+                        <input type="range" id="threshold" min="1" max="100" value="40">
+                        <div class="param-value" id="thresholdValue">40%</div>
+                    </div>
+                </div>
+                
+                <div class="image-comparison">
+                    <div class="image-row">
+                        <div class="image-column">
+                            <div class="image-title">Исходное изображение</div>
+                            <div class="canvas-container">
+                                <canvas id="originalCanvas"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="image-column">
+                            <div class="image-title">Результат сегментации</div>
+                            <div class="canvas-container">
+                                <canvas id="segmentationCanvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-panel" id="segmentationInfo">
+                </div>
+            </div>
+        </section>
+        
+        <section class="app-section">
+            <h2>2. Гистограммы и контрастирование</h2>
+            
+            <div class="input-section">
+                <div class="image-upload-container">
+                    <div class="upload-area" id="uploadArea2">
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #2c3e50;">Загрузите изображение</div>
+                        <p>Нажмите для выбора файла или перетащите сюда изображение</p>
+                        <input type="file" id="imageInput2" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="equalizeHistogram">Эквализация гистограммы</button>
+                    <button id="linearContrast">Линейное контрастирование</button>
+                    <button id="resetHistogram">Сбросить</button>
+                </div>
+                
+                <div class="image-comparison">
+                    <div class="image-row">
+                        <div class="image-column">
+                            <div class="image-title">Исходное изображение</div>
+                            <div class="canvas-container">
+                                <canvas id="originalCanvas2"></canvas>
+                            </div>
+                            <div class="histogram-title">Гистограмма исходного изображения</div>
+                            <div class="histogram-container">
+                                <canvas id="histogramBefore"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="image-column">
+                            <div class="image-title">Обработанное изображение</div>
+                            <div class="canvas-container">
+                                <canvas id="processedCanvas"></canvas>
+                            </div>
+                            <div class="histogram-title">Гистограмма обработанного изображения</div>
+                            <div class="histogram-container">
+                                <canvas id="histogramAfter"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-panel" id="histogramInfo">
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
