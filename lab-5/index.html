@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Лабораторная работа 5 - Вариант 4</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eceff1; display: flex; flex-direction: column; align-items: center; padding: 20px; color: #333; }
+        .main-layout { display: flex; gap: 20px; max-width: 1200px; width: 100%; }
+        .sidebar { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 15px; }
+        .canvas-area { flex: 2; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; }
+        
+        canvas { border: 1px solid #cfd8dc; background: #fafafa; cursor: crosshair; }
+        
+        textarea { width: 100%; height: 200px; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid #b0bec5; border-radius: 4px; padding: 10px; resize: vertical; }
+        
+        button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 4px; transition: 0.3s; font-weight: bold; }
+        .btn-primary { background: #2196F3; color: white; }
+        .btn-primary:hover { background: #1976D2; }
+        .btn-file { background: #607D8B; color: white; }
+        
+        .tabs { display: flex; gap: 5px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #cfd8dc; cursor: pointer; border-radius: 4px; font-size: 0.9em; }
+        .tab.active { background: #2196F3; color: white; }
+        
+        .format-hint { font-size: 0.8em; color: #546e7a; background: #e1f5fe; padding: 10px; border-radius: 4px; border-left: 4px solid #03a9f4; }
+        .legend { display: flex; gap: 15px; font-size: 0.85em; margin-top: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .color-box { width: 12px; height: 12px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<h1>Лабораторная работа №5</h1>
+
+<div class="main-layout">
+    <!-- Панель управления -->
+    <div class="sidebar">
+        <div class="tabs">
+            <div id="tab1" class="tab active" onclick="setPart(1)">Часть 1 (Прямоуг.)</div>
+            <div id="tab2" class="tab" onclick="setPart(2)">Часть 2 (Выпукл. мног.)</div>
+        </div>
+
+        <div class="format-hint" id="hintText">
+            <b>Формат для Части 1:</b><br>
+            n (число отрезков)<br>
+            x1 y1 x2 y2 (n строк)<br>
+            xmin ymin xmax ymax (окно)
+        </div>
+
+        <input type="file" id="fileInput" style="display:none" onchange="handleFile(this)">
+        <button class="btn-file" onclick="document.getElementById('fileInput').click()">📁 Загрузить из файла</button>
+
+        <textarea id="inputData" placeholder="Введите данные здесь..."></textarea>
+        
+        <button class="btn-primary" onclick="draw()">🚀 Построить и отсечь</button>
+
+        <div class="legend">
+            <div class="legend-item"><div class="color-box" style="background: red; opacity: 0.4;"></div> Исходные</div>
+            <div class="legend-item"><div class="color-box" style="background: blue;"></div> Окно</div>
+            <div class="legend-item"><div class="color-box" style="background: #2e7d32;"></div> Видимые</div>
+        </div>
+    </div>
+
+    <!-- Область холста -->
+    <div class="canvas-area">
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <p style="color: #999; font-size: 0.8em;">Сетка: шаг 50 единиц. Центр (0,0) — верхний левый угол (для удобства ввода координат).</p>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let currentPart = 1;
+
+    // Установка части работы
+    function setPart(part) {
+        currentPart = part;
+        document.getElementById('tab1').classList.toggle('active', part === 1);
+        document.getElementById('tab2').classList.toggle('active', part === 2);
+        
+        const hint = document.getElementById('hintText');
+        const area = document.getElementById('inputData');
+        
+        if (part === 1) {
+            hint.innerHTML = "<b>Формат Часть 1:</b><br>n<br>x1 y1 x2 y2 (отрезки)<br>xmin ymin xmax ymax";
+            area.value = "3\n50 50 550 550\n50 550 550 50\n300 10 300 590\n150 150 450 450";
+        } else {
+            hint.innerHTML = "<b>Формат Часть 2:</b><br>n<br>x1 y1 x2 y2 (отрезки)<br>x1 y1 x2 y2 ... (вершины многоугольника)";
+            area.value = "2\n100 300 500 300\n300 100 300 500\n300 150 450 300 300 450 150 300";
+        }
+        draw();
+    }
+
+    // Загрузка файла
+    function handleFile(input) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('inputData').value = e.target.result;
+            draw();
+        };
+        reader.readAsText(file);
+    }
+
+    function drawGrid() {
+        ctx.strokeStyle = "#e0e0e0";
+        ctx.lineWidth = 1;
+        for(let i=0; i<=600; i+=50) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 600); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(600, i); ctx.stroke();
+        }
+    }
+
+    // --- ЧАСТЬ 1: САЗЕРЛЕНД-КОЭН (через явное уравнение прямой) ---
+    const INSIDE = 0, LEFT = 1, RIGHT = 2, BOTTOM = 4, TOP = 8;
+    
+    function getCode(x, y, r) {
+        let code = INSIDE;
+        if (x < r.xmin) code |= LEFT;
+        else if (x > r.xmax) code |= RIGHT;
+        if (y < r.ymin) code |= BOTTOM;
+        else if (y > r.ymax) code |= TOP;
+        return code;
+    }
+
+    function clipSutherlandCohen(x1, y1, x2, y2, rect) {
+        let code1 = getCode(x1, y1, rect);
+        let code2 = getCode(x2, y2, rect);
+
+        while (true) {
+            if (!(code1 | code2)) return {x1, y1, x2, y2}; // Полностью внутри
+            if (code1 & code2) return null; // Полностью снаружи
+
+            let codeOut = code1 ? code1 : code2;
+            let x, y;
+
+            // Используем явное уравнение прямой: y = y1 + m * (x - x1) или x = x1 + (1/m) * (y - y1)
+            // где m = (y2 - y1) / (x2 - x1)
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+
+            if (codeOut & TOP) {
+                x = x1 + dx * (rect.ymax - y1) / dy;
+                y = rect.ymax;
+            } else if (codeOut & BOTTOM) {
+                x = x1 + dx * (rect.ymin - y1) / dy;
+                y = rect.ymin;
+            } else if (codeOut & RIGHT) {
+                y = y1 + dy * (rect.xmax - x1) / dx;
+                x = rect.xmax;
+            } else if (codeOut & LEFT) {
+                y = y1 + dy * (rect.xmin - x1) / dx;
+                x = rect.xmin;
+            }
+
+            if (codeOut === code1) {
+                x1 = x; y1 = y; code1 = getCode(x1, y1, rect);
+            } else {
+                x2 = x; y2 = y; code2 = getCode(x2, y2, rect);
+            }
+        }
+    }
+
+    // --- ЧАСТЬ 2: КИРУС-БЕК (отсечение произвольным выпуклым многоугольником) ---
+    function clipCyrusBeck(p1, p2, poly) {
+        let tIn = 0, tOut = 1;
+        let d = { x: p2.x - p1.x, y: p2.y - p1.y };
+
+        for (let i = 0; i < poly.length; i++) {
+            let pEdge = poly[i];
+            let pNext = poly[(i + 1) % poly.length];
+            
+            // Вектор грани и нормаль (внутренняя)
+            let edge = { x: pNext.x - pEdge.x, y: pNext.y - pEdge.y };
+            let n = { x: -edge.y, y: edge.x }; // Влево от вектора обхода
+            
+            let w = { x: p1.x - pEdge.x, y: p1.y - pEdge.y };
+            let dn = d.x * n.x + d.y * n.y;
+            let wn = w.x * n.x + w.y * n.y;
+
+            if (dn !== 0) {
+                let t = -wn / dn;
+                if (dn > 0) { // t входит
+                    if (t > tIn) tIn = t;
+                } else { // t выходит
+                    if (t < tOut) tOut = t;
+                }
+            } else if (wn < 0) return null; // Точка вне полуплоскости грани
+        }
+
+        if (tIn <= tOut && tIn <= 1 && tOut >= 0) {
+            return {
+                x1: p1.x + Math.max(0, tIn) * d.x, y1: p1.y + Math.max(0, tIn) * d.y,
+                x2: p1.x + Math.min(1, tOut) * d.x, y2: p1.y + Math.min(1, tOut) * d.y
+            };
+        }
+        return null;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, 600, 600);
+        drawGrid();
+
+        const data = document.getElementById('inputData').value.trim().split('\n');
+        if (data.length < 2) return;
+
+        const n = parseInt(data[0]);
+        let segments = [];
+        for(let i = 1; i <= n; i++) {
+            let coords = data[i].trim().split(/\s+/).map(Number);
+            if (coords.length >= 4) segments.push({x1: coords[0], y1: coords[1], x2: coords[2], y2: coords[3]});
+        }
+
+        // Отрисовка исходных линий (фон)
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.4)";
+        ctx.lineWidth = 1;
+        segments.forEach(s => {
+            ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+
+        // Логика по частям
+        if (currentPart === 1) {
+            let winData = data[n+1]?.trim().split(/\s+/).map(Number);
+            if (!winData || winData.length < 4) return;
+            let rect = {xmin: winData[0], ymin: winData[1], xmax: winData[2], ymax: winData[3]};
+
+            // Окно
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(rect.xmin, rect.ymin, rect.xmax - rect.xmin, rect.ymax - rect.ymin);
+
+            // Отсечение
+            ctx.strokeStyle = "#2e7d32";
+            ctx.lineWidth = 3;
+            segments.forEach(s => {
+                let res = clipSutherlandCohen(s.x1, s.y1, s.x2, s.y2, rect);
+                if (res) {
+                    ctx.beginPath(); ctx.moveTo(res.x1, res.y1); ctx.lineTo(res.x2, res.y2); ctx.stroke();
+                }
+            });
+        } else {
+            let polyData = data[n+1]?.trim().split(/\s+/).map(Number);
+            if (!polyData || polyData.length < 6) return;
+            
+            let poly = [];
+            for(let i=0; i < polyData.length; i+=2) {
+                poly.push({x: polyData[i], y: polyData[i+1]});
+            }
+
+            // Окно-многоугольник
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(poly[0].x, poly[0].y);
+            poly.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.closePath();
+            ctx.stroke();
+
+            // Отсечение
+            ctx.strokeStyle = "#2e7d32";
+            ctx.lineWidth = 3;
+            segments.forEach(s => {
+                let res = clipCyrusBeck({x: s.x1, y: s.y1}, {x: s.x2, y: s.y2}, poly);
+                if (res) {
+                    ctx.beginPath(); ctx.moveTo(res.x1, res.y1); ctx.lineTo(res.x2, res.y2); ctx.stroke();
+                }
+            });
+        }
+    }
+
+    // Первичный запуск
+    setPart(1);
+</script>
+</body>
+</html>
