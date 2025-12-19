@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа 4 - Алгоритмы растеризации</title>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Лабораторная работа №4</h1>
+        </header>
+        
+        <div class="content">
+            <div class="controls">
+                <h2>Управление</h2>
+                
+                <div class="control-group">
+                    <label>Выберите фигуру:</label>
+                    <div class="line-circle-controls">
+                        <div class="shape-btn active" id="line-btn">Отрезок</div>
+                        <div class="shape-btn" id="circle-btn">Окружность</div>
+                    </div>
+                </div>
+                
+                <div class="control-group" id="line-controls">
+                    <label>Координаты начала (x1, y1):</label>
+                    <div class="range-inputs">
+                        <input type="number" id="x1" min="-100" max="100" value="-30">
+                        <input type="number" id="y1" min="-100" max="100" value="-20">
+                    </div>
+                    
+                    <label style="margin-top: 15px;">Координаты конца (x2, y2):</label>
+                    <div class="range-inputs">
+                        <input type="number" id="x2" min="-100" max="100" value="40">
+                        <input type="number" id="y2" min="-100" max="100" value="30">
+                    </div>
+                </div>
+                
+                <div class="control-group" id="circle-controls" style="display: none;">
+                    <label>Координаты центра (cx, cy):</label>
+                    <div class="range-inputs">
+                        <input type="number" id="cx" min="-100" max="100" value="0">
+                        <input type="number" id="cy" min="-100" max="100" value="0">
+                    </div>
+                    
+                    <label style="margin-top: 15px;">Радиус окружности:</label>
+                    <input type="number" id="radius" min="1" max="50" value="20">
+                </div>
+                
+                <div class="control-group">
+                    <label>Выберите алгоритмы:</label>
+                    <div class="algorithm-selector">
+    <div class="algo-btn" data-algo="step">
+        <div class="algo-color" style="background: white;"></div>
+        Пошаговый
+    </div>
+    <div class="algo-btn" data-algo="dda">
+        <div class="algo-color" style="background: white;"></div>
+        ЦДА
+    </div>
+    <div class="algo-btn" data-algo="bresenham">
+        <div class="algo-color" style="background: white;"></div>
+        Брезенхем
+    </div>
+    <div class="algo-btn" data-algo="castle-pitway">
+        <div class="algo-color" style="background: white;"></div>
+        Кастла-Питвея
+    </div>
+    <div class="algo-btn active" data-algo="wu">
+        <div class="algo-color" style="background: white;"></div>
+        Ву (сглаживание)
+    </div>
+    <div class="algo-btn" data-algo="bresenham-circle">
+        <div class="algo-color" style="background: white;"></div>
+        Брезенхем (окружность)
+    </div>
+</div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Режим отображения:</label>
+                    <div class="mode-selector">
+                        <div class="mode-btn active" id="mode-compare">Сравнение</div>
+                        <div class="mode-btn" id="mode-single">По отдельности</div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Масштаб (пикселей на единицу координат):</label>
+                    <input type="number" id="scale" min="5" max="50" value="15">
+                    <div class="zoom-controls">
+                        <div class="zoom-btn" id="zoom-in">Увеличить (+)</div>
+                        <div class="zoom-btn" id="zoom-out">Уменьшить (-)</div>
+                    </div>
+                </div>
+                
+                <div class="buttons">
+                    <button class="draw-btn" id="draw-btn">Построить</button>
+                    <button class="clear-btn" id="clear-btn">Очистить</button>
+                </div>
+                
+                <div class="coordinates-info">
+                    <div class="grid-info">
+                        <div class="grid-cell">(0,0)</div>
+                        <div class="grid-label"> - центр координат (один пиксель)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization">
+                <h2>Визуализация алгоритмов</h2>
+                <div id="canvas-container">
+                    <canvas id="canvas" width="800" height="500"></canvas>
+                </div>
+                
+                <!-- <div class="algorithm-explanation" id="algo-explanation">
+                    <strong>Алгоритм Ву (сглаживание):</strong> Алгоритм сглаживания линий (антиалиасинга). Использует взвешенное окрашивание двух соседних пикселей для создания плавных линий без "лесенок".
+                </div> -->
+            </div>
+        </div>
+        
+        <div class="results">
+            <h2>Результаты и характеристики алгоритмов</h2>
+            
+            <div class="algorithm-results">
+                <div class="result-card">
+                    <div class="result-title">Выбранные алгоритмы:</div>
+                    <div class="result-value" id="selected-algos">Ву (сглаживание)</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Общее время выполнения:</div>
+                    <div class="result-value" id="execution-time">0 мс</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Общее количество пикселей:</div>
+                    <div class="result-value" id="pixel-count">0</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-title">Параметры фигуры:</div>
+                    <div class="result-value" id="coordinates">(-30,-20)-(40,30)</div>
+                </div>
+            </div>
+            
+            <div class="algorithm-stats" id="algorithm-stats">
+                <!-- Статистика по алгоритмам будет добавляться динамически -->
+            </div>
+            
+            <div class="explanation">
+                <h3>Пояснительные вычисления:</h3>
+                <div id="calculations">
+                    <p>Для алгоритма Ву с координатами (-30,-20) и (40,30):</p>
+                    <p>1. Вычисляем градиент: gradient = Δy/Δx = (30-(-20))/(40-(-30)) = 50/70 = 0.714</p>
+                    <p>2. Основной цикл по координате x (так как |gradient| < 1)</p>
+                    <p>3. Для каждого шага вычисляем две точки: основную и соседнюю</p>
+                    <p>4. Интенсивность цвета для каждой точки: 1 - fractional_part и fractional_part</p>
+                    <p>5. Отрисовываем пиксели с вычисленной интенсивностью для сглаживания</p>
+                </div>
+                
+                <h3 style="margin-top: 20px;">Особенности алгоритмов:</h3>
+                <div id="algorithms-info">
+    <p><strong>Пошаговый алгоритм:</strong> Простейший, использует уравнение прямой y = kx + b. Медленный из-за операций с плавающей точкой.</p>
+    <p><strong>Алгоритм ЦДА:</strong> Использует приращения, эффективнее пошагового, но всё равно требует операций с плавающей точкой.</p>
+    <p><strong>Алгоритм Брезенхема (линия):</strong> Использует только целочисленные операции, очень эффективен.</p>
+    <p><strong>Алгоритм Кастла-Питвея:</strong> Улучшенный алгоритм Брезенхема, использует критерий средней точки для более точного определения следующего пикселя.</p>
+    <p><strong>Алгоритм Брезенхема (окружность):</strong> Оптимизирован для рисования окружностей, использует симметрию.</p>
+    <p><strong>Алгоритм Ву:</strong> Добавляет сглаживание (антиалиасинг) для более плавных линий, требует вычислений с плавающей точкой.</p>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
