@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Viewer: Cyberpunk Edition (Lab 6 - Letter K)</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.2.1/math.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #0B0C10; /* Глубокий черный/синий */
+            --bg-panel: #1F2833; /* Темно-серый для панели */
+            --text-main: #C5C6C7; /* Светло-серый текст */
+            --accent: #00da49; /* Неоновый циан (акцент) */
+            --accent-dim: #006321; /* Тусклый циан (границы) */
+            --btn-bg: #2C3E50; /* Фон кнопок */
+            --btn-hover: #008111; /* Ховер кнопок */
+
+            --line-3d: #019215; /* Цвет линий модели */
+            --vertex-3d: #FF0055; /* Цвет точек (яркая маджента для контраста) */
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ЛЕВАЯ ЧАСТЬ (ГРАФИК) */
+        .plot-area {
+            flex: 1;
+            background-color: var(--bg-main);
+            position: relative;
+            min-width: 0;
+        }
+
+        /* ПРАВАЯ ЧАСТЬ (ПАНЕЛЬ) */
+        .control-panel {
+            width: 360px;
+            background-color: var(--bg-panel);
+            padding: 25px;
+            overflow-y: auto;
+            height: 100%;
+            box-sizing: border-box;
+            border-left: 2px solid var(--accent-dim);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+            /* Стилизация скроллбара */
+            .control-panel::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .control-panel::-webkit-scrollbar-track {
+                background: var(--bg-main);
+            }
+
+            .control-panel::-webkit-scrollbar-thumb {
+                background: var(--accent-dim);
+                border-radius: 4px;
+            }
+
+                .control-panel::-webkit-scrollbar-thumb:hover {
+                    background: var(--accent);
+                }
+
+        h3 {
+            margin: 0 0 10px 0;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--accent-dim);
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid rgba(102, 252, 241, 0.1);
+            transition: border-color 0.3s;
+        }
+
+            .control-group:hover {
+                border-color: var(--accent-dim);
+            }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--accent-dim);
+            color: var(--accent);
+            border-radius: 4px;
+            text-align: center;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+            input[type="number"]:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 5px var(--accent);
+            }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--btn-bg);
+            color: #fff;
+            border: 1px solid var(--accent-dim);
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+            button:hover {
+                background-color: var(--btn-hover);
+                color: #000;
+                box-shadow: 0 0 10px var(--accent-dim);
+            }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-dim), transparent);
+            margin: 15px 0;
+        }
+
+        /* МАТРИЦА - Стиль терминала */
+        textarea {
+            width: 100%;
+            height: 120px !important;
+            min-height: 200px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            resize: vertical;
+            border: 1px solid var(--accent-dim);
+            border-radius: 4px;
+            background: #000; /* Черный фон для кода */
+            color: var(--accent); /* Неоновый текст */
+            padding: 10px;
+            box-sizing: border-box;
+            white-space: pre;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-panel);
+            padding: 20px;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(102, 252, 241, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+            .modal-header h2 {
+                color: var(--accent);
+                font-size: 1.5rem;
+            }
+
+        .close-btn {
+            width: auto;
+            background: var(--vertex-3d);
+            border: none;
+            color: white;
+            padding: 5px 20px;
+        }
+
+            .close-btn:hover {
+                background: #ff4d88;
+                box-shadow: 0 0 10px #ff4d88;
+            }
+
+        .projections-grid {
+            display: flex;
+            flex: 1;
+            gap: 15px;
+        }
+
+        .proj-plot {
+            flex: 1;
+            background: var(--bg-main);
+            border: 1px solid var(--accent-dim);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ГРАФИК -->
+        <div id="plot3d" class="plot-area"></div>
+
+        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+        <div class="control-panel">
+            <h3>Лабораторная 6: Буква "К"</h3>
+
+            <div class="control-group">
+                <label>Вращение X (°):</label>
+                <div class="input-row"><input type="number" id="rotX" value="0"></div>
+                <button onclick="applyRotation('x')">Вращать X</button>
+            </div>
+
+            <div class="control-group">
+                <label>Вращение Y (°):</label>
+                <div class="input-row"><input type="number" id="rotY" value="0"></div>
+                <button onclick="applyRotation('y')">Вращать Y</button>
+            </div>
+
+            <div class="control-group">
+                <label>Вращение Z (°):</label>
+                <div class="input-row"><input type="number" id="rotZ" value="0"></div>
+                <button onclick="applyRotation('z')">Вращать Z</button>
+            </div>
+
+            <div class="control-group">
+                <label>Масштабирование:</label>
+                <div class="input-row"><input type="number" id="scaleVal" value="1" step="0.1"></div>
+                <button onclick="applyScale()">Применить</button>
+            </div>
+
+            <div class="control-group">
+                <label>Сдвиг (X, Y, Z):</label>
+                <div class="input-row">
+                    <input type="number" id="transX" value="0" placeholder="X">
+                    <input type="number" id="transY" value="0" placeholder="Y">
+                    <input type="number" id="transZ" value="0" placeholder="Z">
+                </div>
+                <button onclick="applyTranslation()">Сдвинуть</button>
+            </div>
+
+            <hr>
+
+            <button onclick="showProjections()" style="border-color: var(--accent);">📊 Показать проекции</button>
+            <div style="height:10px;"></div>
+            <button onclick="resetView()" style="background-color: var(--vertex-3d); border-color: var(--vertex-3d);">♻ Сбросить всё</button>
+
+            <hr>
+
+            <label>Матрица преобразования:</label>
+            <textarea id="matrixOutput" readonly></textarea>
+            <div style="height: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="projModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ортографические проекции</h2>
+                <button class="close-btn" onclick="closeProjections()">✖</button>
+            </div>
+            <div class="projections-grid">
+                <div id="projXY" class="proj-plot"></div>
+                <div id="projXZ" class="proj-plot"></div>
+                <div id="projYZ" class="proj-plot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ БУКВЫ "К" ---
+        // Координаты выстроены так, чтобы буква стояла на плоскости Z
+        const initialVertices = [
+            // --- Передняя грань (Z=1) ---
+            [0, 0, 1],   // 0: Низ лево
+            [1, 0, 1],   // 1: Низ отступ
+            [1, 2, 1],   // 2: Развилка низ
+            [3, 0, 1],   // 3: Нога низ (внутр)
+            [4, 0, 1],   // 4: Нога низ (внеш)
+            [2, 2.5, 1], // 5: Середина (талия)
+            [4, 5, 1],   // 6: Нога верх (внеш)
+            [3, 5, 1],   // 7: Нога верх (внутр)
+            [1, 3, 1],   // 8: Развилка верх
+            [1, 5, 1],   // 9: Верх отступ
+            [0, 5, 1],   // 10: Верх лево
+
+            // --- Задняя грань (Z=0) ---
+            [0, 0, 0],   // 11
+            [1, 0, 0],   // 12
+            [1, 2, 0],   // 13
+            [3, 0, 0],   // 14
+            [4, 0, 0],   // 15
+            [2, 2.5, 0], // 16
+            [4, 5, 0],   // 17
+            [3, 5, 0],   // 18
+            [1, 3, 0],   // 19
+            [1, 5, 0],   // 20
+            [0, 5, 0]    // 21
+        ];
+
+        // Связи (ребра) между вершинами для отрисовки линий
+        const edges = [
+            // Передний контур
+            [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 0],
+            // Задний контур
+            [11, 12], [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20], [20, 21], [21, 11],
+            // Соединительные линии (глубина)
+            [0, 11], [1, 12], [2, 13], [3, 14], [4, 15], [5, 16], [6, 17], [7, 18], [8, 19], [9, 20], [10, 21]
+        ];
+
+        // --- ЛОГИКА ---
+        let transformationMatrix = math.identity(4);
+
+        // Получить текущие координаты с учетом матрицы
+        function getTransformedVertices() {
+            let verticesHomogeneous = initialVertices.map(v => [...v, 1]);
+            let matrixT = math.transpose(transformationMatrix);
+            let transformed = math.multiply(verticesHomogeneous, matrixT);
+            let arr = transformed.toArray();
+            return arr.map(v => [v[0], v[1], v[2]]);
+        }
+
+        // Применить новую матрицу к текущей
+        function applyMatrix(newMatrix) {
+            transformationMatrix = math.multiply(newMatrix, transformationMatrix);
+            updateView();
+        }
+
+        // Вращение
+        function applyRotation(axis) {
+            let angleDeg = parseFloat(document.getElementById('rot' + axis.toUpperCase()).value);
+            let angle = angleDeg * (Math.PI / 180);
+            let M = math.identity(4).toArray();
+            let c = Math.cos(angle), s = Math.sin(angle);
+
+            if (axis === 'x') { M[1][1] = c; M[1][2] = -s; M[2][1] = s; M[2][2] = c; }
+            else if (axis === 'y') { M[0][0] = c; M[0][2] = s; M[2][0] = -s; M[2][2] = c; }
+            else { M[0][0] = c; M[0][1] = -s; M[1][0] = s; M[1][1] = c; }
+            applyMatrix(M);
+        }
+
+        // Масштаб
+        function applyScale() {
+            let s = parseFloat(document.getElementById('scaleVal').value);
+            let M = math.identity(4).toArray();
+            M[0][0] = s; M[1][1] = s; M[2][2] = s;
+            applyMatrix(M);
+        }
+
+        // Перемещение
+        function applyTranslation() {
+            let dx = parseFloat(document.getElementById('transX').value);
+            let dy = parseFloat(document.getElementById('transY').value);
+            let dz = parseFloat(document.getElementById('transZ').value);
+            let M = math.identity(4).toArray();
+            M[0][3] = dx; M[1][3] = dy; M[2][3] = dz;
+            applyMatrix(M);
+        }
+
+        // Сброс
+        function resetView() {
+            transformationMatrix = math.identity(4);
+            document.querySelectorAll('input').forEach(i => i.value = (i.id === 'scaleVal' ? 1 : 0));
+            updateView();
+        }
+
+        // --- ОТРИСОВКА (Обновление графиков) ---
+        function updateView() {
+            let currentVertices = getTransformedVertices();
+
+            // Подготовка данных для линий (разделитель null нужен для разрыва линии в Plotly)
+            let x = [], y = [], z = [];
+            edges.forEach(e => {
+                let p1 = currentVertices[e[0]], p2 = currentVertices[e[1]];
+                x.push(p1[0], p2[0], null); y.push(p1[1], p2[1], null); z.push(p1[2], p2[2], null);
+            });
+
+            // Подготовка данных для вершин (точек)
+            let vx = currentVertices.map(v => v[0]), vy = currentVertices.map(v => v[1]), vz = currentVertices.map(v => v[2]);
+
+            // Вывод матрицы
+            let mat = transformationMatrix.toArray ? transformationMatrix.toArray() : transformationMatrix;
+            let matStr = mat.map(row => row.map(v => v.toFixed(2).padStart(7, ' ')).join('  ')).join('\n\n');
+            document.getElementById('matrixOutput').value = matStr;
+
+            // Конфигурация графика 3D
+            let layout = {
+                paper_bgcolor: "#0B0C10", // Цвет фона всего блока
+                plot_bgcolor: "#0B0C10",  // Цвет фона внутри графика
+                margin: { l: 0, r: 0, t: 0, b: 0 },
+                showlegend: false,
+                scene: {
+                    aspectmode: 'data',
+                    xaxis: { title: 'X', color: '#66FCF1', gridcolor: '#1F2833', zerolinecolor: '#45A29E', backgroundcolor: "#0B0C10" },
+                    yaxis: { title: 'Y', color: '#66FCF1', gridcolor: '#1F2833', zerolinecolor: '#45A29E', backgroundcolor: "#0B0C10" },
+                    zaxis: { title: 'Z', color: '#66FCF1', gridcolor: '#1F2833', zerolinecolor: '#45A29E', backgroundcolor: "#0B0C10" },
+                    camera: { eye: { x: 1.5, y: 1.5, z: 1.5 } } // Камера чуть дальше
+                }
+            };
+
+            Plotly.react('plot3d', [
+                { type: 'scatter3d', mode: 'lines', x: x, y: y, z: z, line: { width: 6, color: '#66FCF1' }, opacity: 0.8 }, // Неоновые линии
+                { type: 'scatter3d', mode: 'markers', x: vx, y: vy, z: vz, marker: { size: 5, color: '#FF0055', symbol: 'circle' } } // Розовые вершины
+            ], layout);
+        }
+
+        // --- ПРОЕКЦИИ ---
+        function showProjections() {
+            document.getElementById('projModal').style.display = 'flex';
+            let verts = getTransformedVertices();
+
+            // Цвета для 2D графиков
+            const layout2d = (title, ax1, ax2) => ({
+                title: { text: title, font: { color: '#66FCF1' } },
+                paper_bgcolor: "#1F2833",
+                plot_bgcolor: "#0B0C10",
+                margin: { l: 40, r: 10, t: 40, b: 40 },
+                xaxis: { title: ax1, color: '#C5C6C7', gridcolor: '#2C3E50' },
+                yaxis: { title: ax2, color: '#C5C6C7', gridcolor: '#2C3E50' }
+            });
+
+            const plot2d = (div, i1, i2, title, ax1, ax2) => {
+                let x = [], y = [];
+                edges.forEach(e => {
+                    x.push(verts[e[0]][i1], verts[e[1]][i1], null);
+                    y.push(verts[e[0]][i2], verts[e[1]][i2], null);
+                });
+                Plotly.newPlot(div, [
+                    { type: 'scatter', mode: 'lines', x: x, y: y, line: { color: '#66FCF1', width: 2 } },
+                    { type: 'scatter', mode: 'markers', x: verts.map(v => v[i1]), y: verts.map(v => v[i2]), marker: { color: '#FF0055', size: 6 } }
+                ], layout2d(title, ax1, ax2));
+            };
+
+            plot2d('projXY', 0, 1, 'Oxy (Вид сверху)', 'X', 'Y');
+            plot2d('projXZ', 0, 2, 'Oxz (Вид спереди)', 'X', 'Z');
+            plot2d('projYZ', 1, 2, 'Oyz (Вид сбоку)', 'Y', 'Z');
+        }
+
+        function closeProjections() { document.getElementById('projModal').style.display = 'none'; }
+
+        // Инициализация
+        updateView();
+        window.onresize = () => Plotly.Plots.resize('plot3d');
+
+    </script>
+</body>
+</html>
